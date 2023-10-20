@@ -1,39 +1,46 @@
 #!/usr/bin/python3
-"""
-Log parsing
-"""
+"""script that reads stdin line by line"""
 
 import sys
 
-if __name__ == '__main__':
 
-    filesize, count = 0, 0
-    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
-    stats = {k: 0 for k in codes}
+if __name__ == "__main__":
+    status_code = {"200": 0,
+                   "301": 0,
+                   "400": 0,
+                   "401": 0,
+                   "403": 0,
+                   "404": 0,
+                   "405": 0,
+                   "500": 0}
+    on_ten = 1
+    file_size = 0
 
-    def print_stats(stats: dict, file_size: int) -> None:
-        print("File size: {:d}".format(filesize))
-        for k, v in sorted(stats.items()):
-            if v:
-                print("{}: {}".format(k, v))
+    def parse_line(line):
+        """parse a line"""
+        try:
+            parsed_line = line.split()
+            code = parsed_line[-2]
+            if code in status_code.keys():
+                status_code[code] += 1
+            return int(parsed_line[-1])
+        except Exception:
+            return 0
+
+    def print_stats():
+        """display the stats"""
+        print("File size: {}".format(file_size))
+        for key in sorted(status_code.keys()):
+            if status_code[key]:
+                print("{}: {}".format(key, status_code[key]))
 
     try:
         for line in sys.stdin:
-            count += 1
-            data = line.split()
-            try:
-                status_code = data[-2]
-                if status_code in stats:
-                    stats[status_code] += 1
-            except BaseException:
-                pass
-            try:
-                filesize += int(data[-1])
-            except BaseException:
-                pass
-            if count % 10 == 0:
-                print_stats(stats, filesize)
-        print_stats(stats, filesize)
+            file_size += parse_line(line)
+            if on_ten % 10 == 0:
+                print_stats()
+            on_ten += 1
     except KeyboardInterrupt:
-        print_stats(stats, filesize)
+        print_stats()
         raise
+    print_stats()
